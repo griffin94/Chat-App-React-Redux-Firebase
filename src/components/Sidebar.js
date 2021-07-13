@@ -1,21 +1,36 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useHistory } from 'react-router-dom';
+import database, { CHANNELS } from '../firebase/firebase';
 import AddIcon from '@material-ui/icons/AddCircleOutlineRounded';
 
-function Sidebar({ rooms }) {
-  console.log(rooms);
+function Sidebar({ channels }) {
+  const { push } = useHistory();
+
+  const addNewChannel = () => {
+    const channelName = prompt('Type new room name');
+    channelName &&
+      database.collection(CHANNELS).add({
+        name: channelName,
+      });
+  };
+
+  const goToChannel = (id) => push(`/channel/${id}`);
+
   return (
     <Container>
       <ChannelsContainer>
         <NewChannelContainer>
           <Label>Channels</Label>
-          <Button>
+          <Button onClick={addNewChannel}>
             <AddIcon />
           </Button>
         </NewChannelContainer>
         <ChannelList>
-          {rooms.map((room) => (
-            <Channel key={room.id}># {room.name}</Channel>
+          {channels.map((channel) => (
+            <Channel key={channel.id} onClick={() => goToChannel(channel.id)}>
+              # {channel.name}
+            </Channel>
           ))}
         </ChannelList>
       </ChannelsContainer>

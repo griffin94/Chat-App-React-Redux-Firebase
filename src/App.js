@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { HashRouter as Router, Route, Switch } from 'react-router-dom';
-import database from './firebase/firebase';
+import database, { CHANNELS } from './firebase/firebase';
 import styled from 'styled-components';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -8,36 +8,40 @@ import Chat from './components/Chat';
 import Login from './components/Login';
 
 function App() {
-  const [rooms, setRooms] = useState([]);
+  const [channels, setChannels] = useState([]);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     getChannels();
   }, []);
 
   const getChannels = () => {
-    database.collection('rooms').onSnapshot((snapshot) => {
-      const rooms = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name,
-      }));
-      setRooms(rooms);
+    database.collection(CHANNELS).onSnapshot((snapshot) => {
+      setChannels(
+        snapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().name,
+        })),
+      );
     });
   };
-
-  console.log(rooms);
 
   return (
     <AppContainer>
       <Router>
         <Header />
-        <Main>
-          <Sidebar rooms={rooms} />
-          <Switch>
-            <Route path="/room" component={Chat} />
-            <Route path="/" component={Login} exact />
-            <Route>Not Found</Route>
-          </Switch>
-        </Main>
+        {user ? (
+          <Main>
+            <Sidebar channels={channels} />
+            <Switch>
+              <Route path="/channel/:channelId" component={Chat} />
+              <Route path="/" component={Login} exact />
+              <Route>Not Found</Route>
+            </Switch>
+          </Main>
+        ) : (
+          <Login setUser={setUser} />
+        )}
       </Router>
     </AppContainer>
   );
@@ -51,7 +55,7 @@ const AppContainer = styled.div`
   grid-template-rows: 40px 1fr;
 `;
 
-const Main = styled.div`
+const Main = styled.main`
   display: grid;
   grid-template-columns: 260px 1fr;
 `;
